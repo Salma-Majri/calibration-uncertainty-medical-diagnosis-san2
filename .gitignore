@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.pt
+*.pth
+*.npy
+data/raw/
+checkpoints/
+outputs/
+.env
+*.log
