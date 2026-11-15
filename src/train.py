@@ -10,7 +10,7 @@ import argparse
 import json
 import platform
 import subprocess
-import sysf
+import sys
 import time
 
 import numpy as np
