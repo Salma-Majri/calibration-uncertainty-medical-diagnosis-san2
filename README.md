@@ -43,9 +43,10 @@ Seeds d'entraînement : 0, 1, 2. Seed des splits : 0.
 
 ```
 configs/protocol.yaml     protocole figé
-data/download.py          téléchargement et préparation des données
+data/download.py          téléchargement et vérification des données (revision figée)
 data/splits/              indices des splits (JSON versionnés)
 src/splits.py             génération des splits
+src/utils.py              config, seeds, chargement du dataset et des splits
 src/dataset.py            Dataset PyTorch
 src/train.py              entraînement
 src/extract_logits.py     extraction des logits par split
@@ -70,11 +71,15 @@ pip install -r requirements.txt
 
 ## Reproduire
 
-Générer les splits (fonctionne dès maintenant) :
-
 ```bash
+python data/download.py                                   # vérifie le dataset (revision figée)
 python src/splits.py --main_ood_center 3 --seed 0 --out data/splits/splits_ood3_seed0.json
+python src/train.py --seed 0                              # idem pour --seed 1 et --seed 2
+python src/extract_logits.py --seed 0                     # idem pour --seed 1 et --seed 2
 ```
+
+L'entraînement a été exécuté sur Colab (GPU T4), environ 30 à 40 minutes par seed.
+`outputs/` et `checkpoints/` ne sont pas versionnés : ils se régénèrent avec les commandes ci-dessus.
 
 Expérience principale (commande unique, à venir) :
 
@@ -86,11 +91,16 @@ bash scripts/run_main.sh
 
 - [x] Structure du projet
 - [x] Splits (`src/splits.py`)
-- [x] Protocole figé (`configs/protocol.yaml`)
-- [ ] Dataset et entraînement
-- [ ] Extraction des logits
-- [ ] Prédiction conforme, MC-Dropout, ensembles
-- [ ] Ablations et analyse des erreurs
+- [x] Protocole figé (`configs/protocol.yaml`), `sigma_levels` à fixer après le pilote sur val
+- [x] Dataset et entraînement (`src/dataset.py`, `src/train.py`, seeds 0, 1, 2)
+- [x] Extraction des logits (`src/extract_logits.py`)
+- [ ] Pilote du bruit (sigma) sur val
+- [ ] Métriques et temperature scaling
+- [ ] Prédiction conforme (LAC, APS, marginale, par classe)
+- [ ] MC-Dropout
+- [ ] Ensembles
+- [ ] Ablations
+- [ ] Analyse des erreurs et figures
 - [ ] Article
 
 ## Limites connues
