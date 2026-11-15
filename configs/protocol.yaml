@@ -1,5 +1,5 @@
 # =====================================================================
-# SAN-2 - Protocole experimental FIGE
+# SAN-2 - PROTOCOLE (v1, sigma a fixer avant test)
 # Question : la prediction conforme tient-elle sa garantie de couverture
 # sous changement de centre (FedISIC2019), et quel taux d'abstention
 # faut-il payer pour la retablir ?
@@ -8,7 +8,7 @@
 dataset:
   name: flwrlabs/fed-isic2019
   hf_split: train            # on n'utilise PAS le split HF "test" (4650 images)
-  revision: null             # TODO: remplacer par le hash de commit HF avant de figer
+  revision: "d1457caea44f57dfe855bcf67e2ec09bb06781e9"
   n_images: 18597
   n_classes: 8
   center_counts: {0: 9930, 1: 3163, 2: 2691, 3: 1807, 4: 655, 5: 351}

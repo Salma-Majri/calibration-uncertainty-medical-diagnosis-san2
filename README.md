@@ -27,7 +27,6 @@ Calibration conforme sur le centre source (ID), sur un petit échantillon du cen
 
 Le protocole est figé avant les résultats dans [`configs/protocol.yaml`](configs/protocol.yaml)
 (splits, seeds, hyperparamètres, niveaux alpha, règles d'usage des jeux de données, limites connues).
-Le tag git `protocol-v1` marque cette version.
 
 | Split | Origine | Taille | Usage |
 |---|---|---|---|

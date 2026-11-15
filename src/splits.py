@@ -144,7 +144,9 @@ if __name__ == "__main__":
 
     # NB : on utilise uniquement le split HF "train" (18597 images).
     # Le split HF "test" (4650 images) n'est PAS utilise dans ce protocole.
-    dataset = load_dataset("flwrlabs/fed-isic2019", split="train")
+    REVISION = "d1457caea44f57dfe855bcf67e2ec09bb06781e9"   
+
+    dataset = load_dataset("flwrlabs/fed-isic2019", split="train", revision=REVISION)  
     centers = np.array(dataset["center"])
     labels = np.array(dataset["label"])
 
