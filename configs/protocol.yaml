@@ -1,5 +1,5 @@
 # =====================================================================
-# SAN-2 - PROTOCOLE (v1, sigma a fixer avant test)
+# SAN-2 - PROTOCOLE (v2 : sigma_levels fixes apres pilote sur val, grille 2)
 # Question : la prediction conforme tient-elle sa garantie de couverture
 # sous changement de centre (FedISIC2019), et quel taux d'abstention
 # faut-il payer pour la retablir ?
@@ -110,7 +110,11 @@ shift_simulation:            # decalages controles en plus du changement de cent
     type: gaussian
     applied_to: test_id      # le centre OOD est deja un decalage reel
     unit: "ecart-type sur l'image en [0,1], AVANT normalisation ImageNet"
-    sigma_levels: null       # TODO: 3 niveaux (leger, moyen, fort) a fixer avant toute evaluation test
+    sigma_levels:
+      leger: 0.008
+      moyen: 0.010
+      fort: 0.015
+    pilot_results: "grille 2 (3 seeds, val) : chute moyenne d'accuracy 1.9 / 4.2 / 10.6 points ; voir noise_pilot_summary_grid2.csv"
     selection_rule: "pilote sur val avec le modele entraine : mesurer la chute d'accuracy en fonction de sigma, choisir 3 niveaux justifies, puis commiter les valeurs"
   subpopulation: "retrait de classes rares ou d'un centre source de test_id"
   prevalence_shift: "reechantillonnage de test_id avec prevalences modifiees"
