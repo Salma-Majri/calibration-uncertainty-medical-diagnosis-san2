@@ -94,6 +94,133 @@ def fig_noise(res_dir, out_dir, tag):
     save(fig, out_dir, f"noise_pilot{tag}")
 
 
+def fig_calibration(res_dir, out_dir):
+    ts_path = res_dir / "temp_scaling.json"
+    if not ts_path.exists():
+        print("temp_scaling.json introuvable : figure calibration ignorée")
+        return
+
+    with open(ts_path) as fh:
+        ts_data = json.load(fh)
+
+    records = []
+    if isinstance(ts_data, dict):
+        source = ts_data.get("per_seed", ts_data)
+
+        for k, v in source.items():
+            if k in ("target_drops", "grid", "sigma_levels", "per_seed"):
+                continue
+
+            # On accepte "0", "seed_0", "seed0", "seed 0", 0 (int)
+            seed_str = str(k).lower().replace("seed", "").replace("_", "").strip()
+            if not seed_str.lstrip("-").isdigit():
+                continue
+            s = int(seed_str)
+
+            if isinstance(v, dict):
+                T = v.get("T", v.get("temperature", v.get("temp")))
+                nll_before = v.get("nll_before", v.get("val_nll_before"))
+                nll_after = v.get("nll_after", v.get("val_nll_after"))
+                ece_before = v.get("ece_before", v.get("calib_ece_before"))
+                ece_after = v.get("ece_after", v.get("calib_ece_after"))
+
+                if T is None:
+                    print(f"[warn] seed {s} : aucune température trouvée, ligne ignorée")
+                    continue
+
+                records.append({
+                    "seed": s,
+                    "T": float(T),
+                    "nll_before": nll_before,
+                    "nll_after": nll_after,
+                    "ece_before": ece_before,
+                    "ece_after": ece_after,
+                })
+            elif isinstance(v, (int, float)):
+                records.append({
+                    "seed": s,
+                    "T": float(v),
+                    "nll_before": None,
+                    "nll_after": None,
+                    "ece_before": None,
+                    "ece_after": None,
+                })
+
+    if not records:
+        print("Format temp_scaling.json non reconnu : figure calibration ignorée")
+        return
+
+    df = pd.DataFrame(records).sort_values("seed").reset_index(drop=True)
+
+    metric_cols = ["nll_before", "nll_after", "ece_before", "ece_after"]
+    has_metrics = (
+        all(c in df.columns for c in metric_cols)
+        and df[metric_cols].notna().all().all()
+    )
+
+    def seed_color(s):
+        for key in (s, str(s), f"seed_{s}", f"seed{s}"):
+            if key in COLORS:
+                return COLORS[key]
+        return "gray"
+
+    if has_metrics:
+        fig, ax = plt.subplots(1, 3, figsize=(13, 3.8), constrained_layout=True)
+        seeds = df["seed"].astype(int)
+        x = np.arange(len(seeds))
+        w = 0.35
+        labels = [f"seed {s}" for s in seeds]
+        colors = [seed_color(s) for s in seeds]
+
+        # Panel 1 : Température
+        ax[0].bar(x, df["T"], color=colors, width=0.5)
+        ax[0].axhline(1.0, ls="--", color="k", lw=1, label="T = 1.0")
+        ax[0].set_xticks(x)
+        ax[0].set_xticklabels(labels)
+        ax[0].set_ylabel("Température T")
+        ax[0].set_title("Température optimale")
+        ax[0].legend(fontsize=8)
+        ax[0].grid(alpha=0.3, axis="y")
+
+        # Panel 2 : NLL avant/après
+        ax[1].bar(x - w / 2, df["nll_before"], width=w, label="avant T", alpha=0.75)
+        ax[1].bar(x + w / 2, df["nll_after"], width=w, label="après T", alpha=0.9)
+        ax[1].set_xticks(x)
+        ax[1].set_xticklabels(labels)
+        ax[1].set_ylabel("NLL")
+        ax[1].set_title("NLL (val)")
+        ax[1].legend(fontsize=8)
+        ax[1].grid(alpha=0.3, axis="y")
+
+        # Panel 3 : ECE avant/après
+        ax[2].bar(x - w / 2, df["ece_before"], width=w, label="avant T", alpha=0.75)
+        ax[2].bar(x + w / 2, df["ece_after"], width=w, label="après T", alpha=0.9)
+        ax[2].set_xticks(x)
+        ax[2].set_xticklabels(labels)
+        ax[2].set_ylabel("ECE")
+        ax[2].set_title("ECE (calib)")
+        ax[2].legend(fontsize=8)
+        ax[2].grid(alpha=0.3, axis="y")
+
+        fig.suptitle("Calibration post-hoc par Temperature Scaling", fontsize=10)
+
+    else:
+        fig, ax = plt.subplots(figsize=(5.5, 3.8), constrained_layout=True)
+        x = np.arange(len(df))
+        labels = [f"seed {s}" for s in df["seed"].astype(int)]
+        colors = [seed_color(s) for s in df["seed"].astype(int)]
+
+        ax.bar(x, df["T"], color=colors, width=0.5)
+        ax.axhline(1.0, ls="--", color="k", lw=1, label="T = 1.0")
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.set_ylabel("Température T")
+        ax.set_title("Temperature Scaling par seed")
+        ax.legend(fontsize=8)
+        ax.grid(alpha=0.3, axis="y")
+
+    save(fig, out_dir, "calibration_temp_scaling")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results_dir", default="outputs/results")
@@ -107,6 +234,7 @@ def main():
 
     fig_training(res_dir, out_dir)
     fig_noise(res_dir, out_dir, args.noise_tag)
+    fig_calibration(res_dir, out_dir)
 
 
 if __name__ == "__main__":
